@@ -24,6 +24,18 @@ export function addTodo(text: string): Todo {
   return todo;
 }
 
+/** Removes the todo with the id. Returns `true` when the id existed. */
+export function removeTodo(id: string): boolean {
+  const index = todos.findIndex((todo) => todo.id === id);
+
+  if (index === -1) {
+    return false;
+  }
+
+  todos.splice(index, 1);
+  return true;
+}
+
 export const todosRouter = new Hono();
 
 todosRouter.get('/', (c) => c.json({ todos: listTodos() }));
@@ -40,4 +52,14 @@ todosRouter.post('/', async (c) => {
   }
 
   return c.json({ todo: addTodo(text) }, 201);
+});
+
+todosRouter.delete('/:id', (c) => {
+  const id = c.req.param('id');
+
+  if (!removeTodo(id)) {
+    return c.json({ error: 'Todo not found' }, 404);
+  }
+
+  return c.body(null, 204);
 });

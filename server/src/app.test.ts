@@ -65,4 +65,34 @@ describe('todo-app API', () => {
     const body = (await response.json()) as { error: unknown };
     expect(typeof body.error).toBe('string');
   });
+
+  test('deletes a todo and no longer lists it', async () => {
+    const added = await app.request('/api/todos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text: 'delete me' }),
+    });
+
+    const { todo } = (await added.json()) as {
+      todo: { id: string; text: string; createdAt: number };
+    };
+
+    const deleted = await app.request(`/api/todos/${todo.id}`, { method: 'DELETE' });
+
+    expect(deleted.status).toBe(204);
+    expect(await deleted.text()).toBe('');
+
+    const list = await app.request('/api/todos');
+    expect(((await list.json()) as { todos: unknown[] }).todos).not.toContainEqual(todo);
+  });
+
+  test('returns 404 when deleting an unknown todo id', async () => {
+    const response = await app.request('/api/todos/00000000-0000-0000-0000-000000000000', {
+      method: 'DELETE',
+    });
+
+    expect(response.status).toBe(404);
+    const body = (await response.json()) as { error: unknown };
+    expect(typeof body.error).toBe('string');
+  });
 });
