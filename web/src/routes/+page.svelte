@@ -1,13 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import TodoForm from '../lib/TodoForm.svelte';
-  import { createTodo, listTodos, type Todo } from '../lib/todos';
+  import TodoItem from '../lib/TodoItem.svelte';
+  import { createTodo, deleteTodo, listTodos, type Todo } from '../lib/todos';
 
   type Status = 'loading' | 'ready' | 'error';
 
   let todos = $state<Todo[]>([]);
   let status = $state<Status>('loading');
   let errorMessage = $state('');
+  let removeErrorMessage = $state('');
 
   function messageFrom(error: unknown): string {
     if (error instanceof Error && error.message !== '') return error.message;
@@ -33,6 +35,26 @@
       return true;
     } catch (error) {
       errorMessage = messageFrom(error);
+      return false;
+    }
+  }
+
+  async function handleRemove(id: string): Promise<boolean> {
+    const index = todos.findIndex((todo) => todo.id === id);
+    if (index === -1) return true;
+
+    const removed = todos[index];
+    todos = todos.filter((todo) => todo.id !== id);
+    removeErrorMessage = '';
+
+    try {
+      await deleteTodo(id);
+      return true;
+    } catch (error) {
+      const restored = [...todos];
+      restored.splice(index, 0, removed);
+      todos = restored;
+      removeErrorMessage = messageFrom(error);
       return false;
     }
   }
@@ -107,9 +129,19 @@
             class="divide-y divide-base-light overflow-hidden rounded-sm border border-base-light"
           >
             {#each todos as todo (todo.id)}
-              <li class="bg-white px-4 py-3 text-base">{todo.text}</li>
+              <TodoItem {todo} onRemove={handleRemove} />
             {/each}
           </ul>
+
+          {#if removeErrorMessage !== ''}
+            <p
+              data-testid="todos-remove-error"
+              role="alert"
+              class="mt-3 text-base font-semibold text-error"
+            >
+              {removeErrorMessage}
+            </p>
+          {/if}
         {/if}
       </section>
     {/if}
