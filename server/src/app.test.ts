@@ -94,6 +94,39 @@ describe('todo-app API', () => {
     expect(typeof ((await response.json()) as { error: string }).error).toBe('string');
   });
 
+  test('rejects a bad dueDate on create', async () => {
+    const response = await app.request('/api/todos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'Bad date', dueDate: '2026-02-31' }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(typeof ((await response.json()) as { error: string }).error).toBe('string');
+  });
+
+  test('rejects a bad dueDate on update', async () => {
+    const created = await app.request('/api/todos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'Keep the date' }),
+    });
+    const todo = (await created.json()) as { id: string; dueDate: string | null };
+
+    const response = await app.request(`/api/todos/${todo.id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ dueDate: '2026-02-31' }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(typeof ((await response.json()) as { error: string }).error).toBe('string');
+
+    const listed = await app.request('/api/todos');
+    const todos = (await listed.json()) as (typeof todo)[];
+    expect(todos.find((candidate) => candidate.id === todo.id)?.dueDate).toBeNull();
+  });
+
   test('answers an unknown API route with a JSON 404, not the SPA shell', async () => {
     const response = await app.request('/api/does-not-exist');
 

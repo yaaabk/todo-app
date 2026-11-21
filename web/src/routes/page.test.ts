@@ -70,14 +70,48 @@ it('adds a task through the form and shows it', async () => {
   });
 
   fireEvent.input(screen.getByTestId('todo-title'), { target: { value: 'Buy milk' } });
-  fireEvent.input(screen.getByTestId('todo-due-date'), { target: { value: '2026-12-01' } });
+  fireEvent.input(screen.getByTestId('todo-due-date'), { target: { value: '2099-12-01' } });
   fireEvent.submit(screen.getByTestId('todo-title').closest('form') as HTMLFormElement);
 
   await waitFor(() => {
     expect(screen.getByTestId('todo-item')).toHaveTextContent('Buy milk');
   });
-  expect(screen.getByTestId('todo-item')).toHaveTextContent('2026-12-01');
+  expect(screen.getByTestId('todo-item')).toHaveTextContent('1 Dec');
   expect(screen.getByTestId('todo-title')).toHaveValue('');
+});
+
+it('shows the Overdue label for a past due date that is not complete', async () => {
+  stubFetch((url) => {
+    if (url === '/api/todos') {
+      return jsonResponse([todo({ id: '9', title: 'Pay the bill', dueDate: '2020-01-02' })]);
+    }
+    throw new Error(`unexpected request to ${url}`);
+  });
+
+  render(Page);
+
+  await waitFor(() => {
+    expect(screen.getByTestId('todo-item')).toHaveTextContent('Overdue');
+  });
+  expect(screen.getByTestId('todo-item')).toHaveTextContent('Pay the bill');
+});
+
+it('shows the date, not Overdue, for a completed task with a past due date', async () => {
+  stubFetch((url) => {
+    if (url === '/api/todos') {
+      return jsonResponse([
+        todo({ id: '10', title: 'Paid the bill', completed: true, dueDate: '2020-01-02' }),
+      ]);
+    }
+    throw new Error(`unexpected request to ${url}`);
+  });
+
+  render(Page);
+
+  await waitFor(() => {
+    expect(screen.getByTestId('todo-due-label')).toHaveTextContent('2 Jan');
+  });
+  expect(screen.getByTestId('todo-item')).not.toHaveTextContent('Overdue');
 });
 
 it('shows the error the API returns for an invalid task', async () => {
