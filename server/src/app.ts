@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serveStatic } from 'hono/bun';
+import { createTodo, listTodos } from './todos';
 
 /** Absolute path to the SvelteKit build, independent of the working directory. */
 const webRoot = join(import.meta.dir, '..', '..', 'web', 'build');
@@ -21,6 +22,17 @@ app.use('/api/*', cors());
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
 app.get('/api/hello', (c) => c.json({ message: 'Hello from todo-app' }));
+
+app.get('/api/todos', (c) => c.json(listTodos()));
+
+app.post('/api/todos', async (c) => {
+  const input = await c.req.json().catch(() => null);
+  const result = createTodo(input ?? {});
+  if (!result.ok) {
+    return c.json({ error: result.error }, 400);
+  }
+  return c.json(result.value, 201);
+});
 
 // Serve the built SvelteKit single-page app, falling back to `index.html` so
 // client-side routes resolve. Unknown API routes must stay JSON 404s: without

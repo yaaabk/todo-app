@@ -16,6 +16,78 @@ describe('todo-app API', () => {
     expect(await response.json()).toEqual({ message: 'Hello from todo-app' });
   });
 
+  test('creates a todo, lists it and reads it back', async () => {
+    const created = await app.request('/api/todos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'Write the plan', dueDate: '2026-12-01' }),
+    });
+
+    expect(created.status).toBe(201);
+    const todo = (await created.json()) as {
+      id: string;
+      title: string;
+      completed: boolean;
+      dueDate: string | null;
+      createdAt: string;
+    };
+    expect(todo.id).toBeTruthy();
+    expect(todo.title).toBe('Write the plan');
+    expect(todo.completed).toBe(false);
+    expect(todo.dueDate).toBe('2026-12-01');
+    expect(todo.createdAt).toBeTruthy();
+
+    const listed = await app.request('/api/todos');
+
+    expect(listed.status).toBe(200);
+    const todos = (await listed.json()) as (typeof todo)[];
+    expect(todos.find((candidate) => candidate.id === todo.id)).toEqual(todo);
+  });
+
+  test('creates a todo without a due date', async () => {
+    const response = await app.request('/api/todos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'No date needed' }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(((await response.json()) as { dueDate: string | null }).dueDate).toBeNull();
+  });
+
+  test('rejects an empty title', async () => {
+    const response = await app.request('/api/todos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: '   ' }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(typeof ((await response.json()) as { error: string }).error).toBe('string');
+  });
+
+  test('rejects a title longer than 200 characters', async () => {
+    const response = await app.request('/api/todos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'x'.repeat(201) }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(typeof ((await response.json()) as { error: string }).error).toBe('string');
+  });
+
+  test('rejects a due date that is not a real YYYY-MM-DD date', async () => {
+    const response = await app.request('/api/todos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'Bad date', dueDate: '2026-02-30' }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(typeof ((await response.json()) as { error: string }).error).toBe('string');
+  });
+
   test('answers an unknown API route with a JSON 404, not the SPA shell', async () => {
     const response = await app.request('/api/does-not-exist');
 
