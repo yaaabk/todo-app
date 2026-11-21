@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serveStatic } from 'hono/bun';
+import { todosRouter } from './todos';
 
 /** Absolute path to the SvelteKit build, independent of the working directory. */
 const webRoot = join(import.meta.dir, '..', '..', 'web', 'build');
@@ -21,6 +22,8 @@ app.use('/api/*', cors());
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
 app.get('/api/hello', (c) => c.json({ message: 'Hello from todo-app' }));
+
+app.route('/api/todos', todosRouter);
 
 // Serve the built SvelteKit single-page app, falling back to `index.html` so
 // client-side routes resolve.
