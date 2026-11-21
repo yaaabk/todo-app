@@ -1,0 +1,22 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: todo-app
+  namespace: yaaabk-9341656d
+  labels:
+    app.kubernetes.io/name: todo-app
+    yaaabk.io/project-id: '9341656d-b8c9-48ac-9e61-fafc675c7997'
+spec:
+  parentRefs:
+    - name: internal
+      namespace: kube-system
+  hostnames:
+    - todo-app.otohgunga.nl
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: todo-app
+          port: 80

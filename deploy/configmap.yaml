@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-app-config
+  namespace: yaaabk-9341656d
+  labels:
+    app.kubernetes.io/name: todo-app
+    yaaabk.io/project-id: '9341656d-b8c9-48ac-9e61-fafc675c7997'
+data:
+  NODE_ENV: production
+  PORT: '3000'
