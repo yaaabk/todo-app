@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { formatDueDate, isOverdue } from '#lib/format';
   import { createTodo, deleteTodo, listTodos, updateTodo, type Todo } from '#lib/todos';
 
   let todos = $state<Todo[]>([]);
@@ -58,6 +59,22 @@
       error = cause instanceof Error ? cause.message : 'Could not remove the task.';
     }
   }
+
+  /** The border and background classes for a task row. */
+  function todoClass(todo: Todo): string {
+    if (!todo.completed && isOverdue(todo.dueDate, todo.completed)) {
+      return 'border-red-300 bg-red-50';
+    }
+    return 'border-neutral-200';
+  }
+
+  /** The text colour for a task's due date label. */
+  function dueDateClass(todo: Todo): string {
+    if (!todo.completed && isOverdue(todo.dueDate, todo.completed)) {
+      return 'font-medium text-red-600';
+    }
+    return 'text-neutral-500';
+  }
 </script>
 
 <main class="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 p-8">
@@ -106,7 +123,7 @@
     {:else}
       {#each todos as todo (todo.id)}
         <li
-          class="flex items-center gap-3 rounded border border-neutral-200 px-3 py-2"
+          class="flex items-center gap-3 rounded border px-3 py-2 {todoClass(todo)}"
           data-testid="todo-item"
         >
           <button
@@ -124,7 +141,9 @@
             {todo.title}
           </span>
           {#if todo.dueDate}
-            <span class="text-sm text-neutral-500">{todo.dueDate}</span>
+            <span class="text-sm {dueDateClass(todo)}" data-testid="todo-due-label">
+              {formatDueDate(todo.dueDate, todo.completed)}
+            </span>
           {/if}
           <button
             class="rounded border border-neutral-300 px-2 py-1 text-sm"
