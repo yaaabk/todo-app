@@ -1,5 +1,11 @@
-import { describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, test } from 'bun:test';
 import { app } from './app';
+
+const originalFetch = globalThis.fetch;
+
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+});
 
 describe('todo-app API', () => {
   test('reports health', async () => {
@@ -93,5 +99,33 @@ describe('todo-app API', () => {
 
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: 'Not found' });
+  });
+
+  test('returns the boxer photo the dog.ceo API answers with', async () => {
+    globalThis.fetch = (async (input: string) => {
+      expect(input).toBe('https://dog.ceo/api/breed/boxer/images/random');
+      return Response.json({
+        status: 'success',
+        message: 'https://images.dog.ceo/breeds/boxer/n02108089_1560.jpg',
+      });
+    }) as unknown as typeof fetch;
+
+    const response = await app.request('/api/boxer');
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      url: 'https://images.dog.ceo/breeds/boxer/n02108089_1560.jpg',
+    });
+  });
+
+  test('falls back to the bundled boxer photo when dog.ceo fails', async () => {
+    globalThis.fetch = (async () => {
+      throw new Error('dog.ceo is unreachable');
+    }) as unknown as typeof fetch;
+
+    const response = await app.request('/api/boxer');
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ url: '/boxer-fallback.jpg' });
   });
 });
