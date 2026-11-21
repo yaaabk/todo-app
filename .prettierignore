@@ -1,0 +1,12 @@
+bun.lock
+# Accepted Plans are verbatim decision records; YAAABK writes them, Agents do
+# not reformat them.
+docs/plans
+node_modules
+**/node_modules
+build
+**/build
+.svelte-kit
+**/.svelte-kit
+dist
+**/dist
