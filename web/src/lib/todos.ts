@@ -34,3 +34,15 @@ export async function createTodo(text: string): Promise<Todo> {
   const body = (await response.json()) as { todo: Todo };
   return body.todo;
 }
+
+/** Removes the todo with the id through `DELETE /api/todos/:id`. */
+export async function deleteTodo(id: string): Promise<void> {
+  const response = await fetch(`/api/todos/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `Could not remove the todo (HTTP ${response.status})`);
+  }
+}
