@@ -98,3 +98,28 @@ it('shows the error the API returns for an invalid task', async () => {
     expect(screen.getByTestId('todo-error')).toHaveTextContent('Title is required');
   });
 });
+
+it('marks a task done when the done button is clicked', async () => {
+  stubFetch((url, init) => {
+    if (url === '/api/todos/1' && init?.method === 'PATCH') {
+      const input = JSON.parse(String(init.body)) as { completed: boolean };
+      return jsonResponse(todo({ completed: input.completed }));
+    }
+    if (url === '/api/todos') return jsonResponse([todo()]);
+    throw new Error(`unexpected request to ${url}`);
+  });
+
+  render(Page);
+
+  await waitFor(() => {
+    expect(screen.getByTestId('todo-item')).toHaveTextContent('Water the plants');
+  });
+
+  fireEvent.click(screen.getByTestId('todo-done'));
+
+  await waitFor(() => {
+    expect(screen.getByTestId('todo-item')).toHaveTextContent('Undo');
+  });
+  expect(screen.getByTestId('todo-item')).toHaveTextContent('Water the plants');
+  expect(screen.getByTestId('todo-title-text').className).toContain('line-through');
+});

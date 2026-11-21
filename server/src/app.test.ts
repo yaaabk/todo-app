@@ -88,6 +88,54 @@ describe('todo-app API', () => {
     expect(typeof ((await response.json()) as { error: string }).error).toBe('string');
   });
 
+  test('updates a todo and deletes it, answering 404 for an unknown id', async () => {
+    const created = await app.request('/api/todos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'Ship the feature' }),
+    });
+
+    expect(created.status).toBe(201);
+    const todo = (await created.json()) as { id: string };
+
+    const patched = await app.request(`/api/todos/${todo.id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ completed: true, title: 'Ship the feature, done' }),
+    });
+
+    expect(patched.status).toBe(200);
+    const updated = (await patched.json()) as { id: string; title: string; completed: boolean };
+    expect(updated.id).toBe(todo.id);
+    expect(updated.title).toBe('Ship the feature, done');
+    expect(updated.completed).toBe(true);
+
+    const removed = await app.request(`/api/todos/${todo.id}`, { method: 'DELETE' });
+
+    expect(removed.status).toBe(204);
+
+    const listed = (await (await app.request('/api/todos')).json()) as { id: string }[];
+    expect(listed.find((candidate) => candidate.id === todo.id)).toBeUndefined();
+  });
+
+  test('answers 404 when updating an unknown id', async () => {
+    const response = await app.request('/api/todos/does-not-exist', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ completed: true }),
+    });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: 'Todo not found' });
+  });
+
+  test('answers 404 when deleting an unknown id', async () => {
+    const response = await app.request('/api/todos/does-not-exist', { method: 'DELETE' });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: 'Todo not found' });
+  });
+
   test('answers an unknown API route with a JSON 404, not the SPA shell', async () => {
     const response = await app.request('/api/does-not-exist');
 

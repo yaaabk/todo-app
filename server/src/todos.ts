@@ -33,6 +33,9 @@ export interface TodoPatch {
 /** The longest a title may be. */
 const MAX_TITLE_LENGTH = 200;
 
+/** The error message the store returns for an unknown id. */
+export const TODO_NOT_FOUND = 'Todo not found';
+
 const todos: Todo[] = [];
 let nextId = 1;
 
@@ -95,7 +98,7 @@ export function createTodo(input: CreateTodoInput): TodoResult<Todo> {
 /** Validates `patch` and applies it to the todo with `id`. */
 export function updateTodo(id: string, patch: TodoPatch): TodoResult<Todo> {
   const todo = todos.find((candidate) => candidate.id === id);
-  if (todo === undefined) return { ok: false, error: 'Todo not found' };
+  if (todo === undefined) return { ok: false, error: TODO_NOT_FOUND };
 
   if (patch?.title !== undefined) {
     const title = parseTitle(patch.title);
@@ -122,7 +125,7 @@ export function updateTodo(id: string, patch: TodoPatch): TodoResult<Todo> {
 /** Removes the todo with `id`, or reports that it was not found. */
 export function deleteTodo(id: string): TodoResult<Todo> {
   const index = todos.findIndex((candidate) => candidate.id === id);
-  if (index === -1) return { ok: false, error: 'Todo not found' };
+  if (index === -1) return { ok: false, error: TODO_NOT_FOUND };
 
   const [deleted] = todos.splice(index, 1);
   return { ok: true, value: deleted };

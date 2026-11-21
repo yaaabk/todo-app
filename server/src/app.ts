@@ -3,7 +3,14 @@ import { join } from 'node:path';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serveStatic } from 'hono/bun';
-import { createTodo, listTodos } from './todos';
+import {
+  createTodo,
+  deleteTodo,
+  listTodos,
+  TODO_NOT_FOUND,
+  updateTodo,
+  type TodoPatch,
+} from './todos';
 
 /** Absolute path to the SvelteKit build, independent of the working directory. */
 const webRoot = join(import.meta.dir, '..', '..', 'web', 'build');
@@ -32,6 +39,24 @@ app.post('/api/todos', async (c) => {
     return c.json({ error: result.error }, 400);
   }
   return c.json(result.value, 201);
+});
+
+app.patch('/api/todos/:id', async (c) => {
+  const input = await c.req.json().catch(() => null);
+  const result = updateTodo(c.req.param('id'), input ?? {});
+  if (!result.ok) {
+    const status = result.error === TODO_NOT_FOUND ? 404 : 400;
+    return c.json({ error: result.error }, status);
+  }
+  return c.json(result.value, 200);
+});
+
+app.delete('/api/todos/:id', (c) => {
+  const result = deleteTodo(c.req.param('id'));
+  if (!result.ok) {
+    return c.json({ error: result.error }, 404);
+  }
+  return c.body(null, 204);
 });
 
 // Serve the built SvelteKit single-page app, falling back to `index.html` so
