@@ -38,6 +38,8 @@ function todo(overrides: Partial<Todo> = {}): Todo {
 it('shows the app title and the tasks the API returns', async () => {
   stubFetch((url) => {
     if (url === '/api/todos') return jsonResponse([todo()]);
+    if (url === '/api/boxer')
+      return jsonResponse({ url: 'https://images.dog.ceo/breeds/boxer/one.jpg' });
     throw new Error(`unexpected request to ${url}`);
   });
 
@@ -56,6 +58,8 @@ it('adds a task through the form and shows it', async () => {
       return jsonResponse(todo({ id: '2', title: input.title, dueDate: input.dueDate }), 201);
     }
     if (url === '/api/todos') return jsonResponse([]);
+    if (url === '/api/boxer')
+      return jsonResponse({ url: 'https://images.dog.ceo/breeds/boxer/two.jpg' });
     throw new Error(`unexpected request to ${url}`);
   });
 
@@ -116,6 +120,8 @@ it('shows the error the API returns for an invalid task', async () => {
       return jsonResponse({ error: 'Title is required' }, 400);
     }
     if (url === '/api/todos') return jsonResponse([]);
+    if (url === '/api/boxer')
+      return jsonResponse({ url: 'https://images.dog.ceo/breeds/boxer/three.jpg' });
     throw new Error(`unexpected request to ${url}`);
   });
 
@@ -130,5 +136,24 @@ it('shows the error the API returns for an invalid task', async () => {
 
   await waitFor(() => {
     expect(screen.getByTestId('todo-error')).toHaveTextContent('Title is required');
+  });
+});
+
+it('shows the boxer photo the API returns', async () => {
+  stubFetch((url) => {
+    if (url === '/api/todos') return jsonResponse([]);
+    if (url === '/api/boxer') {
+      return jsonResponse({ url: 'https://images.dog.ceo/breeds/boxer/photo.jpg' });
+    }
+    throw new Error(`unexpected request to ${url}`);
+  });
+
+  render(Page);
+
+  await waitFor(() => {
+    expect(screen.getByTestId('boxer-photo')).toHaveAttribute(
+      'src',
+      'https://images.dog.ceo/breeds/boxer/photo.jpg',
+    );
   });
 });

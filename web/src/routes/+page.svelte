@@ -9,8 +9,10 @@
   let error = $state('');
   let loading = $state(true);
   let saving = $state(false);
+  let boxerUrl = $state('/boxer-fallback.jpg');
 
   onMount(async () => {
+    void loadBoxerPhoto();
     try {
       todos = await listTodos();
     } catch {
@@ -19,6 +21,20 @@
       loading = false;
     }
   });
+
+  /** Loads a fresh boxer photo, keeping the bundled one when the API fails. */
+  async function loadBoxerPhoto() {
+    try {
+      const response = await fetch('/api/boxer');
+      if (!response.ok) return;
+      const body = (await response.json()) as { url?: unknown };
+      if (typeof body.url === 'string' && body.url !== '') {
+        boxerUrl = body.url;
+      }
+    } catch {
+      // Keep the bundled photo.
+    }
+  }
 
   async function addTodo(event: SubmitEvent) {
     event.preventDefault();
@@ -31,6 +47,7 @@
       todos = [...todos, todo];
       title = '';
       dueDate = '';
+      void loadBoxerPhoto();
     } catch (cause) {
       error = cause instanceof Error ? cause.message : 'Could not add the task.';
     } finally {
@@ -56,6 +73,8 @@
 </script>
 
 <main class="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 p-8">
+  <img class="h-48 w-full rounded object-cover" data-testid="boxer-photo" src={boxerUrl} alt="" />
+
   <h1 data-testid="app-title" class="text-4xl font-bold tracking-tight">todo-app</h1>
 
   <form class="flex flex-col gap-3 sm:flex-row sm:items-end" onsubmit={addTodo}>

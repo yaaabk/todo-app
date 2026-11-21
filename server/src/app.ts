@@ -34,6 +34,30 @@ app.post('/api/todos', async (c) => {
   return c.json(result.value, 201);
 });
 
+/** The bundled dog photo shipped with the app, used when `dog.ceo` is unreachable. */
+const BOXER_FALLBACK_URL = '/boxer-fallback.jpg';
+
+/** The longest the `dog.ceo` call may take before falling back. */
+const DOG_CEO_TIMEOUT_MS = 2_000;
+
+/** The `dog.ceo` random-photo response, or the fallback when it cannot answer. */
+app.get('/api/boxer', async (c) => {
+  try {
+    const response = await fetch('https://dog.ceo/api/breed/boxer/images/random', {
+      signal: AbortSignal.timeout(DOG_CEO_TIMEOUT_MS),
+    });
+    if (response.ok) {
+      const body = (await response.json()) as { status?: unknown; message?: unknown };
+      if (body.status === 'success' && typeof body.message === 'string' && body.message !== '') {
+        return c.json({ url: body.message });
+      }
+    }
+  } catch {
+    // Fall through to the bundled photo.
+  }
+  return c.json({ url: BOXER_FALLBACK_URL });
+});
+
 app.patch('/api/todos/:id', async (c) => {
   const input = await c.req.json().catch(() => null);
   const result = updateTodo(c.req.param('id'), input ?? {});
