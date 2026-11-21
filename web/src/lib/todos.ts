@@ -14,6 +14,13 @@ export interface CreateTodoInput {
   dueDate?: string | null;
 }
 
+/** The fields `PATCH /api/todos/:id` accepts. */
+export interface UpdateTodoInput {
+  title?: string;
+  completed?: boolean;
+  dueDate?: string | null;
+}
+
 /** Reads an error message out of a failed API response. */
 async function errorFrom(response: Response): Promise<Error> {
   const body = (await response.json().catch(() => null)) as { error?: unknown } | null;
@@ -38,4 +45,21 @@ export async function createTodo(input: CreateTodoInput): Promise<Todo> {
   });
   if (!response.ok) throw await errorFrom(response);
   return (await response.json()) as Todo;
+}
+
+/** Updates a todo and returns it. */
+export async function updateTodo(id: string, input: UpdateTodoInput): Promise<Todo> {
+  const response = await fetch(`/api/todos/${id}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) throw await errorFrom(response);
+  return (await response.json()) as Todo;
+}
+
+/** Deletes a todo. */
+export async function deleteTodo(id: string): Promise<void> {
+  const response = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
+  if (!response.ok) throw await errorFrom(response);
 }

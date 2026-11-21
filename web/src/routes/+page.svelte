@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { formatDueDate, isOverdue } from '#lib/format';
-  import { createTodo, listTodos, type Todo } from '#lib/todos';
+  import { createTodo, deleteTodo, listTodos, updateTodo, type Todo } from '#lib/todos';
 
   let todos = $state<Todo[]>([]);
   let title = $state('');
@@ -52,6 +52,28 @@
       error = cause instanceof Error ? cause.message : 'Could not add the task.';
     } finally {
       saving = false;
+    }
+  }
+
+  async function toggleTodo(todo: Todo) {
+    error = '';
+    const updated = await updateTodo(todo.id, { completed: !todo.completed }).catch(
+      (cause: unknown) => {
+        error = cause instanceof Error ? cause.message : 'Could not update the task.';
+        return null;
+      },
+    );
+    if (updated === null) return;
+    todos = todos.map((candidate) => (candidate.id === updated.id ? updated : candidate));
+  }
+
+  async function removeTodo(todo: Todo) {
+    error = '';
+    try {
+      await deleteTodo(todo.id);
+      todos = todos.filter((candidate) => candidate.id !== todo.id);
+    } catch (cause) {
+      error = cause instanceof Error ? cause.message : 'Could not remove the task.';
     }
   }
 
@@ -120,15 +142,36 @@
     {:else}
       {#each todos as todo (todo.id)}
         <li
-          class="flex items-center justify-between gap-3 rounded border px-3 py-2 {todoClass(todo)}"
+          class="flex items-center gap-3 rounded border px-3 py-2 {todoClass(todo)}"
           data-testid="todo-item"
         >
-          <span class={todo.completed ? 'text-neutral-400 line-through' : ''}>{todo.title}</span>
+          <button
+            class="rounded border border-neutral-300 px-2 py-1 text-sm"
+            data-testid="todo-done"
+            type="button"
+            onclick={() => toggleTodo(todo)}
+          >
+            {todo.completed ? 'Undo' : 'Done'}
+          </button>
+          <span
+            class={todo.completed ? 'flex-1 text-neutral-400 line-through' : 'flex-1'}
+            data-testid="todo-title-text"
+          >
+            {todo.title}
+          </span>
           {#if todo.dueDate}
             <span class="text-sm {dueDateClass(todo)}" data-testid="todo-due-label">
               {formatDueDate(todo.dueDate, todo.completed)}
             </span>
           {/if}
+          <button
+            class="rounded border border-neutral-300 px-2 py-1 text-sm"
+            data-testid="todo-remove"
+            type="button"
+            onclick={() => removeTodo(todo)}
+          >
+            Remove
+          </button>
         </li>
       {/each}
     {/if}
