@@ -184,3 +184,62 @@ it('shows the boxer photo the API returns', async () => {
     );
   });
 });
+
+it('shows the remaining boxer photos as a pack under the hero photo', async () => {
+  stubFetch((url) => {
+    if (url === '/api/todos') return jsonResponse([]);
+    if (url === '/api/boxer') {
+      return jsonResponse({
+        url: 'https://images.dog.ceo/breeds/boxer/hero.jpg',
+        images: [
+          'https://images.dog.ceo/breeds/boxer/hero.jpg',
+          'https://images.dog.ceo/breeds/boxer/pack-one.jpg',
+          'https://images.dog.ceo/breeds/boxer/pack-two.jpg',
+        ],
+      });
+    }
+    throw new Error(`unexpected request to ${url}`);
+  });
+
+  render(Page);
+
+  await waitFor(() => {
+    expect(screen.getByTestId('boxer-photo')).toHaveAttribute(
+      'src',
+      'https://images.dog.ceo/breeds/boxer/hero.jpg',
+    );
+  });
+
+  expect(screen.getByTestId('boxer-pack')).toBeInTheDocument();
+  const packItems = screen.getAllByTestId('boxer-pack-item');
+  expect(packItems).toHaveLength(2);
+  expect(packItems[0]?.querySelector('img')).toHaveAttribute(
+    'src',
+    'https://images.dog.ceo/breeds/boxer/pack-one.jpg',
+  );
+  expect(packItems[1]?.querySelector('img')).toHaveAttribute(
+    'src',
+    'https://images.dog.ceo/breeds/boxer/pack-two.jpg',
+  );
+});
+
+it('hides the boxer pack when the reply has no extra photo', async () => {
+  stubFetch((url) => {
+    if (url === '/api/todos') return jsonResponse([]);
+    if (url === '/api/boxer') {
+      return jsonResponse({ url: 'https://images.dog.ceo/breeds/boxer/only.jpg' });
+    }
+    throw new Error(`unexpected request to ${url}`);
+  });
+
+  render(Page);
+
+  await waitFor(() => {
+    expect(screen.getByTestId('boxer-photo')).toHaveAttribute(
+      'src',
+      'https://images.dog.ceo/breeds/boxer/only.jpg',
+    );
+  });
+
+  expect(screen.queryByTestId('boxer-pack')).not.toBeInTheDocument();
+});

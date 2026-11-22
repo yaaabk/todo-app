@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { formatDueDate, isOverdue } from '#lib/format';
+  import { loadBoxerPhotos } from '#lib/boxer';
   import { createTodo, deleteTodo, listTodos, updateTodo, type Todo } from '#lib/todos';
 
   let todos = $state<Todo[]>([]);
@@ -10,6 +11,7 @@
   let loading = $state(true);
   let saving = $state(false);
   let boxerUrl = $state('/boxer-fallback.jpg');
+  let boxerImages = $state<string[]>([]);
 
   onMount(async () => {
     void loadBoxerPhoto();
@@ -22,15 +24,12 @@
     }
   });
 
-  /** Loads a fresh boxer photo, keeping the bundled one when the API fails. */
+  /** Loads a fresh set of boxer photos, keeping the bundled one when the API fails. */
   async function loadBoxerPhoto() {
     try {
-      const response = await fetch('/api/boxer');
-      if (!response.ok) return;
-      const body = (await response.json()) as { url?: unknown };
-      if (typeof body.url === 'string' && body.url !== '') {
-        boxerUrl = body.url;
-      }
+      const photos = await loadBoxerPhotos();
+      boxerUrl = photos.url;
+      boxerImages = photos.images;
     } catch {
       // Keep the bundled photo.
     }
@@ -96,6 +95,16 @@
 
 <main class="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 p-8">
   <img class="h-48 w-full rounded object-cover" data-testid="boxer-photo" src={boxerUrl} alt="" />
+
+  {#if boxerImages.length > 1}
+    <ul class="flex flex-wrap gap-2" data-testid="boxer-pack">
+      {#each boxerImages.slice(1) as image (image)}
+        <li data-testid="boxer-pack-item">
+          <img class="h-24 w-24 rounded object-cover" src={image} alt="" />
+        </li>
+      {/each}
+    </ul>
+  {/if}
 
   <h1 data-testid="app-title" class="text-4xl font-bold tracking-tight">todo-app</h1>
 

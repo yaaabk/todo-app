@@ -50,19 +50,24 @@ const DOG_CEO_TIMEOUT_MS = 2_000;
 /** The `dog.ceo` random-photo response, or the fallback when it cannot answer. */
 app.get('/api/boxer', async (c) => {
   try {
-    const response = await fetch('https://dog.ceo/api/breed/boxer/images/random', {
+    const response = await fetch('https://dog.ceo/api/breed/boxer/images/random/3', {
       signal: AbortSignal.timeout(DOG_CEO_TIMEOUT_MS),
     });
     if (response.ok) {
       const body = (await response.json()) as { status?: unknown; message?: unknown };
-      if (body.status === 'success' && typeof body.message === 'string' && body.message !== '') {
-        return c.json({ url: body.message });
+      if (body.status === 'success' && Array.isArray(body.message)) {
+        const images = body.message.filter(
+          (image): image is string => typeof image === 'string' && image !== '',
+        );
+        if (images.length > 0) {
+          return c.json({ url: images[0], images });
+        }
       }
     }
   } catch {
     // Fall through to the bundled photo.
   }
-  return c.json({ url: BOXER_FALLBACK_URL });
+  return c.json({ url: BOXER_FALLBACK_URL, images: [BOXER_FALLBACK_URL] });
 });
 
 app.patch('/api/todos/:id', async (c) => {
