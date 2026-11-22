@@ -182,12 +182,16 @@ describe('todo-app API', () => {
     expect(await response.json()).toEqual({ error: 'Not found' });
   });
 
-  test('returns the boxer photo the dog.ceo API answers with', async () => {
+  test('returns the three boxer photos the dog.ceo API answers with', async () => {
     globalThis.fetch = (async (input: string) => {
-      expect(input).toBe('https://dog.ceo/api/breed/boxer/images/random');
+      expect(input).toBe('https://dog.ceo/api/breed/boxer/images/random/3');
       return Response.json({
         status: 'success',
-        message: 'https://images.dog.ceo/breeds/boxer/n02108089_1560.jpg',
+        message: [
+          'https://images.dog.ceo/breeds/boxer/n02108089_1560.jpg',
+          'https://images.dog.ceo/breeds/boxer/n02108089_1561.jpg',
+          'https://images.dog.ceo/breeds/boxer/n02108089_1562.jpg',
+        ],
       });
     }) as unknown as typeof fetch;
 
@@ -196,6 +200,27 @@ describe('todo-app API', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       url: 'https://images.dog.ceo/breeds/boxer/n02108089_1560.jpg',
+      images: [
+        'https://images.dog.ceo/breeds/boxer/n02108089_1560.jpg',
+        'https://images.dog.ceo/breeds/boxer/n02108089_1561.jpg',
+        'https://images.dog.ceo/breeds/boxer/n02108089_1562.jpg',
+      ],
+    });
+  });
+
+  test('drops entries that are not non-empty strings from the boxer photo reply', async () => {
+    globalThis.fetch = (async () =>
+      Response.json({
+        status: 'success',
+        message: ['https://images.dog.ceo/breeds/boxer/valid.jpg', '', null],
+      })) as unknown as typeof fetch;
+
+    const response = await app.request('/api/boxer');
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      url: 'https://images.dog.ceo/breeds/boxer/valid.jpg',
+      images: ['https://images.dog.ceo/breeds/boxer/valid.jpg'],
     });
   });
 
@@ -207,6 +232,9 @@ describe('todo-app API', () => {
     const response = await app.request('/api/boxer');
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ url: '/boxer-fallback.jpg' });
+    expect(await response.json()).toEqual({
+      url: '/boxer-fallback.jpg',
+      images: ['/boxer-fallback.jpg'],
+    });
   });
 });
