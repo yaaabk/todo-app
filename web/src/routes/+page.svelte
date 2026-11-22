@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import BoxerIcon from '#lib/BoxerIcon.svelte';
   import { formatDueDate, isOverdue } from '#lib/format';
   import { loadBoxerPhotos } from '#lib/boxer';
   import { createTodo, deleteTodo, listTodos, updateTodo, type Todo } from '#lib/todos';
@@ -130,11 +131,12 @@
       />
     </label>
     <button
-      class="rounded bg-neutral-900 px-4 py-2 font-medium text-white disabled:opacity-50"
+      class="inline-flex items-center gap-1.5 rounded bg-neutral-900 px-4 py-2 font-medium text-white disabled:opacity-50"
       data-testid="todo-submit"
       type="submit"
       disabled={saving}
     >
+      <BoxerIcon name="paw" class="h-4 w-4" />
       Add task
     </button>
   </form>
@@ -155,11 +157,12 @@
           data-testid="todo-item"
         >
           <button
-            class="rounded border border-neutral-300 px-2 py-1 text-sm"
+            class="inline-flex items-center gap-1.5 rounded border border-neutral-300 px-2 py-1 text-sm"
             data-testid="todo-done"
             type="button"
             onclick={() => toggleTodo(todo)}
           >
+            <BoxerIcon name="check" class="h-4 w-4" />
             {todo.completed ? 'Undo' : 'Done'}
           </button>
           <span
@@ -174,11 +177,12 @@
             </span>
           {/if}
           <button
-            class="rounded border border-neutral-300 px-2 py-1 text-sm"
+            class="inline-flex items-center gap-1.5 rounded border border-neutral-300 px-2 py-1 text-sm"
             data-testid="todo-remove"
             type="button"
             onclick={() => removeTodo(todo)}
           >
+            <BoxerIcon name="bone" class="h-4 w-4" />
             Remove
           </button>
         </li>

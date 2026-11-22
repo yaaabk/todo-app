@@ -243,3 +243,23 @@ it('hides the boxer pack when the reply has no extra photo', async () => {
 
   expect(screen.queryByTestId('boxer-pack')).not.toBeInTheDocument();
 });
+
+it('puts a boxer icon beside each button label', async () => {
+  stubFetch((url) => {
+    if (url === '/api/todos') return jsonResponse([todo()]);
+    if (url === '/api/boxer')
+      return jsonResponse({ url: 'https://images.dog.ceo/breeds/boxer/icons.jpg' });
+    throw new Error(`unexpected request to ${url}`);
+  });
+
+  render(Page);
+
+  await waitFor(() => {
+    expect(screen.getByTestId('todo-item')).toHaveTextContent('Water the plants');
+  });
+
+  expect(screen.getAllByTestId('boxer-icon').length).toBeGreaterThanOrEqual(3);
+  expect(screen.getByTestId('todo-submit')).toHaveTextContent('Add task');
+  expect(screen.getByTestId('todo-done')).toHaveTextContent('Done');
+  expect(screen.getByTestId('todo-remove')).toHaveTextContent('Remove');
+});
