@@ -1,1 +1,63 @@
 @import 'tailwindcss';
+
+:root {
+  --boxer-fawn: #d9ae82;
+  --boxer-fawn-light: #ead2bb;
+  --boxer-mask: #3e2b20;
+  --boxer-cream: #fbf7f4;
+  --boxer-paw: #c9a58a;
+}
+
+html {
+  background-color: var(--boxer-cream);
+  color: var(--boxer-mask);
+}
+
+.boxer-background {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--boxer-cream);
+}
+
+.boxer-paw-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: url('/paw-print.svg');
+  background-repeat: repeat;
+  background-position: center;
+  background-size: 96px 96px;
+  opacity: 0.45;
+}
+
+.boxer-background-photo {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 1.5rem;
+  object-fit: cover;
+  opacity: 0.16;
+  filter: sepia(0.25);
+}
+
+.boxer-background-photo:first-of-type {
+  top: 8%;
+  left: -5%;
+  transform: rotate(-8deg);
+}
+
+.boxer-background-photo:last-of-type {
+  right: -5%;
+  bottom: 8%;
+  transform: rotate(8deg);
+}
+
+@media (max-width: 768px) {
+  .boxer-background-photo {
+    width: 180px;
+    height: 180px;
+    opacity: 0.12;
+  }
+}

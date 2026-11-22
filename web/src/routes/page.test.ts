@@ -244,6 +244,63 @@ it('hides the boxer pack when the reply has no extra photo', async () => {
   expect(screen.queryByTestId('boxer-pack')).not.toBeInTheDocument();
 });
 
+it('shows the boxer background with the paw pattern and faded background photos', async () => {
+  stubFetch((url) => {
+    if (url === '/api/todos') return jsonResponse([]);
+    if (url === '/api/boxer') {
+      return jsonResponse({
+        url: 'https://images.dog.ceo/breeds/boxer/hero.jpg',
+        images: [
+          'https://images.dog.ceo/breeds/boxer/hero.jpg',
+          'https://images.dog.ceo/breeds/boxer/bg-one.jpg',
+          'https://images.dog.ceo/breeds/boxer/bg-two.jpg',
+        ],
+      });
+    }
+    throw new Error(`unexpected request to ${url}`);
+  });
+
+  render(Page);
+
+  expect(screen.getByTestId('boxer-background')).toHaveAttribute('aria-hidden', 'true');
+
+  await waitFor(() => {
+    const bgPhotos = screen.getAllByTestId('boxer-background-photo');
+    expect(bgPhotos).toHaveLength(2);
+    expect(bgPhotos[0]).toHaveAttribute('src', 'https://images.dog.ceo/breeds/boxer/hero.jpg');
+    expect(bgPhotos[0]).toHaveAttribute('alt', '');
+    expect(bgPhotos[1]).toHaveAttribute('src', 'https://images.dog.ceo/breeds/boxer/bg-one.jpg');
+    expect(bgPhotos[1]).toHaveAttribute('alt', '');
+  });
+});
+
+it('shows a single faded photo in the boxer background when only one photo is returned', async () => {
+  stubFetch((url) => {
+    if (url === '/api/todos') return jsonResponse([]);
+    if (url === '/api/boxer') {
+      return jsonResponse({ url: 'https://images.dog.ceo/breeds/boxer/solo.jpg' });
+    }
+    throw new Error(`unexpected request to ${url}`);
+  });
+
+  render(Page);
+
+  expect(screen.getByTestId('boxer-background')).toHaveAttribute('aria-hidden', 'true');
+
+  await waitFor(() => {
+    expect(screen.getByTestId('boxer-photo')).toHaveAttribute(
+      'src',
+      'https://images.dog.ceo/breeds/boxer/solo.jpg',
+    );
+  });
+
+  const bgPhotos = screen.getAllByTestId('boxer-background-photo');
+  expect(bgPhotos.length).toBeGreaterThanOrEqual(1);
+  expect(bgPhotos.length).toBeLessThanOrEqual(2);
+  expect(bgPhotos[0]).toHaveAttribute('src', 'https://images.dog.ceo/breeds/boxer/solo.jpg');
+  expect(bgPhotos[0]).toHaveAttribute('alt', '');
+});
+
 it('puts a boxer icon beside each button label', async () => {
   stubFetch((url) => {
     if (url === '/api/todos') return jsonResponse([todo()]);
