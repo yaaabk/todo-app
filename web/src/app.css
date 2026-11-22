@@ -40,18 +40,74 @@ html {
   object-fit: cover;
   opacity: 0.16;
   filter: sepia(0.25);
+  --sway-rotate: 0deg;
 }
 
 .boxer-background-photo:first-of-type {
   top: 8%;
   left: -5%;
-  transform: rotate(-8deg);
+  --sway-rotate: -8deg;
 }
 
 .boxer-background-photo:last-of-type {
   right: -5%;
   bottom: 8%;
-  transform: rotate(8deg);
+  --sway-rotate: 8deg;
+}
+
+.boxer-hero {
+  animation:
+    boxer-hero-bob 4s ease-in-out infinite,
+    boxer-hero-pop 0.45s ease-out;
+}
+
+.boxer-sway,
+.boxer-background-sway {
+  animation: boxer-background-sway 14s ease-in-out infinite;
+}
+
+@keyframes boxer-hero-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes boxer-hero-pop {
+  0% {
+    opacity: 0.65;
+    transform: scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes boxer-background-sway {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(var(--sway-rotate, 0deg));
+  }
+  50% {
+    transform: translate(12px, -14px) rotate(calc(var(--sway-rotate, 0deg) + 2deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boxer-hero,
+  .boxer-sway,
+  .boxer-background-sway,
+  .boxer-background-photo {
+    animation: none;
+  }
 }
 
 @media (max-width: 768px) {
