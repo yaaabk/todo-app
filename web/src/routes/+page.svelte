@@ -98,11 +98,23 @@
   <div class="boxer-background" data-testid="boxer-background" aria-hidden="true">
     <div class="boxer-paw-pattern"></div>
     {#each boxerImages.slice(0, 2) as image (image)}
-      <img class="boxer-background-photo" data-testid="boxer-background-photo" src={image} alt="" />
+      <img
+        class="boxer-background-photo boxer-sway boxer-background-sway"
+        data-testid="boxer-background-photo"
+        src={image}
+        alt=""
+      />
     {/each}
   </div>
 
-  <img class="h-48 w-full rounded object-cover" data-testid="boxer-photo" src={boxerUrl} alt="" />
+  {#key boxerUrl}
+    <img
+      class="boxer-hero h-48 w-full rounded object-cover"
+      data-testid="boxer-photo"
+      src={boxerUrl}
+      alt=""
+    />
+  {/key}
 
   {#if boxerImages.length > 1}
     <ul class="flex flex-wrap gap-2" data-testid="boxer-pack">

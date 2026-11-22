@@ -301,6 +301,41 @@ it('shows a single faded photo in the boxer background when only one photo is re
   expect(bgPhotos[0]).toHaveAttribute('alt', '');
 });
 
+it('applies the boxer-hero class to the hero photo and the sway class to the background photos', async () => {
+  stubFetch((url) => {
+    if (url === '/api/todos') return jsonResponse([]);
+    if (url === '/api/boxer') {
+      return jsonResponse({
+        url: 'https://images.dog.ceo/breeds/boxer/hero.jpg',
+        images: [
+          'https://images.dog.ceo/breeds/boxer/hero.jpg',
+          'https://images.dog.ceo/breeds/boxer/bg-one.jpg',
+          'https://images.dog.ceo/breeds/boxer/bg-two.jpg',
+        ],
+      });
+    }
+    throw new Error(`unexpected request to ${url}`);
+  });
+
+  render(Page);
+
+  await waitFor(() => {
+    expect(screen.getByTestId('boxer-photo')).toHaveAttribute(
+      'src',
+      'https://images.dog.ceo/breeds/boxer/hero.jpg',
+    );
+  });
+
+  expect(screen.getByTestId('boxer-photo')).toHaveClass('boxer-hero');
+
+  const bgPhotos = screen.getAllByTestId('boxer-background-photo');
+  expect(bgPhotos.length).toBeGreaterThanOrEqual(1);
+  for (const bgPhoto of bgPhotos) {
+    expect(bgPhoto).toHaveClass('boxer-sway');
+    expect(bgPhoto.className).toContain('sway');
+  }
+});
+
 it('puts a boxer icon beside each button label', async () => {
   stubFetch((url) => {
     if (url === '/api/todos') return jsonResponse([todo()]);
