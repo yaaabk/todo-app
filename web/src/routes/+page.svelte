@@ -95,6 +95,13 @@
 </script>
 
 <main class="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 p-8">
+  <div class="boxer-background" data-testid="boxer-background" aria-hidden="true">
+    <div class="boxer-paw-pattern"></div>
+    {#each boxerImages.slice(0, 2) as image (image)}
+      <img class="boxer-background-photo" data-testid="boxer-background-photo" src={image} alt="" />
+    {/each}
+  </div>
+
   <img class="h-48 w-full rounded object-cover" data-testid="boxer-photo" src={boxerUrl} alt="" />
 
   {#if boxerImages.length > 1}
